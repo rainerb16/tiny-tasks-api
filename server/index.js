@@ -7,7 +7,6 @@
  * - Basic validation + status codes
  *
  * Routes:
- * - GET    /health
  * - GET    /tasks
  * - GET    /tasks/:id
  * - POST   /tasks
@@ -17,7 +16,6 @@
 
 const express = require("express");
 const cors = require("cors");
-
 const app = express();
 
 /* ---------- Middleware ---------- */
@@ -146,8 +144,16 @@ app.delete("/tasks/:id", (req, res) => {
 
 /* ---------- Start server ---------- */
 
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Tiny Tasks API running on http://localhost:${PORT}`);
-  console.log(`Try: http://localhost:${PORT}/tasks`);
-});
+const PORT = process.env.PORT || 3000;
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Tiny Tasks API running on http://localhost:${PORT}`);
+    console.log(`Try: http://localhost:${PORT}/tasks`);
+  });
+}
+
+module.exports = app;
+
+
+
