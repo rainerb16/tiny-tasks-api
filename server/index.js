@@ -1,13 +1,18 @@
 /**
  * Tiny Tasks API (Node + Express)
  * --------------------------------
- * This is a small backend to practice API fundamentals:
+ * Small backend to practice API fundamentals:
  * - CRUD routes for "tasks"
  * - In-memory data (no database yet)
  * - Basic validation + status codes
  *
- * TODO: swap the in-memory array for SQLite/Postgres, while keeping
- * the same API contract (routes + response shapes).
+ * Routes:
+ * - GET    /health
+ * - GET    /tasks
+ * - GET    /tasks/:id
+ * - POST   /tasks
+ * - PATCH  /tasks/:id
+ * - DELETE /tasks/:id
  */
 
 const express = require("express");
@@ -15,21 +20,20 @@ const cors = require("cors");
 
 const app = express();
 
-// Middleware
-// -----------------------------
+/* ---------- Middleware ---------- */
 
-// Allow JSON request bodies (e.g., POST/PUT with {"title": "..."})
+// Parse JSON bodies (POST/PATCH)
 app.use(express.json());
 
-// Allow requests from a frontend dev server.
+// Allow requests from frontend dev server
 app.use(
   cors({
     origin: true,
   })
 );
 
-// In-memory "database"
-// -----------------------------
+/* ---------- In-memory "DB" ---------- */
+
 let tasks = [
   { id: 1, title: "Test task", completed: false },
   { id: 2, title: "Another task", completed: true },
@@ -37,46 +41,26 @@ let tasks = [
 
 let nextId = 3;
 
-// Helper functions
-// -----------------------------
+/* ---------- Helpers ---------- */
 
-/**
- * Find a task by ID (number). Returns undefined if not found.
- */
+// Find a task by numeric id
 function findTaskById(id) {
   return tasks.find((t) => t.id === id);
 }
 
-/**
- * Parse an ID from req.params and return a number.
- * Returns NaN if invalid.
- */
+// Convert :id param to a number
 function parseId(param) {
   return Number(param);
 }
 
-// Routes
-// -----------------------------
+/* ---------- Routes ---------- */
 
-/**
- * GET /health -> { ok: true }
- */
-app.get("/health", (req, res) => {
-  res.json({ ok: true });
-});
-
-/**
- * GET /tasks
- * Returns all tasks.
- */
+// GET /tasks -> all tasks
 app.get("/tasks", (req, res) => {
   res.json(tasks);
 });
 
-/**
- * GET /tasks/:id
- * Returns one task by id.
- */
+// GET /tasks/:id -> one task
 app.get("/tasks/:id", (req, res) => {
   const id = parseId(req.params.id);
   if (Number.isNaN(id)) {
@@ -91,15 +75,10 @@ app.get("/tasks/:id", (req, res) => {
   res.json(task);
 });
 
-/**
- * POST /tasks
- * Creates a new task.
- * Body: { title: string }
- */
+// POST /tasks -> create a task
 app.post("/tasks", (req, res) => {
   const { title } = req.body;
 
-  // Basic validation
   if (!title || typeof title !== "string" || !title.trim()) {
     return res.status(400).json({ error: "title is required" });
   }
@@ -111,16 +90,11 @@ app.post("/tasks", (req, res) => {
   };
 
   tasks.push(newTask);
-
-  // 201 Created is a standard status code for successful creation
   res.status(201).json(newTask);
 });
 
-/**
- * PUT /tasks/:id
- * Toggles completion (simple update).
- */
-app.put("/tasks/:id", (req, res) => {
+// PATCH /tasks/:id -> partial update
+app.patch("/tasks/:id", (req, res) => {
   const id = parseId(req.params.id);
   if (Number.isNaN(id)) {
     return res.status(400).json({ error: "Invalid id" });
@@ -131,14 +105,30 @@ app.put("/tasks/:id", (req, res) => {
     return res.status(404).json({ error: "Task not found" });
   }
 
-  task.completed = !task.completed;
+  const { title, completed } = req.body;
+
+  // Update title if provided
+  if (title !== undefined) {
+    if (typeof title !== "string" || !title.trim()) {
+      return res
+        .status(400)
+        .json({ error: "title must be a non-empty string" });
+    }
+    task.title = title.trim();
+  }
+
+  // Update completed if provided
+  if (completed !== undefined) {
+    if (typeof completed !== "boolean") {
+      return res.status(400).json({ error: "completed must be a boolean" });
+    }
+    task.completed = completed;
+  }
+
   res.json(task);
 });
 
-/**
- * DELETE /tasks/:id
- * Deletes a task.
- */
+// DELETE /tasks/:id -> delete a task
 app.delete("/tasks/:id", (req, res) => {
   const id = parseId(req.params.id);
   if (Number.isNaN(id)) {
@@ -154,8 +144,8 @@ app.delete("/tasks/:id", (req, res) => {
   res.json(deletedTask);
 });
 
-// Start server
-// -----------------------------
+/* ---------- Start server ---------- */
+
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Tiny Tasks API running on http://localhost:${PORT}`);
