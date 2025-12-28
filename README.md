@@ -4,15 +4,23 @@ A simple REST API built with Node.js and Express to support a frontend task mana
 
 This project is designed to demonstrate backend fundamentals, clean routing, and frontend integration.
 
+## Live API
+https://tiny-tasks-api.onrender.com/tasks
+
 ---
 
 ## Tech Stack
 
 - Node.js
 - Express
-- JavaScript
-- In-memory data store (no database)
-- CORS enabled for frontend integration
+- Jest & Supertest
+- Render (deployment)
+
+## Features
+- RESTful CRUD endpoints
+- PATCH-based partial updates
+- In-memory data store
+- Jest + Supertest API tests
 
 ---
 
@@ -56,3 +64,10 @@ http://localhost:3000
 You can verify it's working by visiting:
 http://localhost:3000/tasks
 
+
+## Design Decisions
+
+- **PATCH for updates:** Supports partial updates (e.g., `title` or `completed`) without requiring full task replacement.
+- **In-memory data store:** Keeps the project focused on API fundamentals; easy to swap for a DB later without changing routes.
+- **Validation + status codes:** Returns clear `400/404` errors to make frontend integration predictable.
+- **Testability:** The Express `app` is exported so Jest/Supertest can test routes without opening a real network port.
